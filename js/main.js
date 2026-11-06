@@ -42,7 +42,6 @@
   }
 
   function ustawUslugi(otwarte) {
-    if (!rozwin || !megamenu) return;
     rozwin.setAttribute('aria-expanded', String(otwarte));
     megamenu.classList.toggle('otwarta', otwarte);
   }
