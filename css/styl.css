@@ -1174,3 +1174,8 @@ body:has(.lightbox[open]) .tel-plywak{display:none}
   .stopka__dol{margin-top:var(--o-6);gap:var(--o-3);font-size:.8125rem}
   .stopka__dokumenty{flex-direction:column;align-items:flex-start;gap:0}
 }
+
+/* 6.11: ozdoby tła (płatek, słońce) wychodzą poza prawą krawędź. Safari na iPhonie ignoruje overflow-x:hidden
+   na body i strona pływała w bok, więc przycinamy je w samych sekcjach (clip nie tworzy przewijania). */
+html{overflow-x:clip}
+.hero,.sekcja,.stopka,.wycena-karta,.wycena-karta__info{overflow-x:clip}
