@@ -1174,3 +1174,7 @@ body:has(.lightbox[open]) .tel-plywak{display:none}
    na body i strona pływała w bok, więc przycinamy je w samych sekcjach (clip nie tworzy przewijania). */
 html{overflow-x:clip}
 .hero,.sekcja,.stopka,.wycena-karta,.wycena-karta__info{overflow-x:clip}
+
+/* 6.11: tytuł okna wyceny to akapit (bez drugiego H2 o tej samej treści co sekcja formularza), wygląd jak h2 */
+.okno__tytul{margin:0;font-family:var(--f-tytul);font-weight:800;font-style:italic;text-transform:uppercase;line-height:1.06;letter-spacing:-.015em;text-wrap:balance;color:var(--tekst)}
+.okno__tytul em{font-style:normal;color:var(--niebieski)}
