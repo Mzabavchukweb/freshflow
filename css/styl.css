@@ -1090,3 +1090,17 @@ a.tabliczka__duza{display:inline-flex;align-items:center;min-height:44px}
   .hero__wizual--usluga .tabliczka__glowa{margin-bottom:var(--o-3);padding-right:120px}
   .hero__wizual--usluga .szybki{margin-top:var(--o-3)}
 }
+
+/* 6.11: CTA w nagłówku także na telefonie. Przełącznik języka zostaje w menu, w pasku jest wycena; poniżej 512 px krótki napis */
+.naglowek__wycena-krotki{display:none}
+@media(max-width:47.99em){
+  .naglowek__pas > .jezyki{display:none}
+  .naglowek__wycena{display:inline-flex;align-items:center;justify-content:center;flex:none;min-height:44px;padding:10px 14px;font-size:.9375rem;line-height:1}
+  .menu-przycisk{flex:none}
+}
+@media(max-width:31.99em){
+  .naglowek__wycena-dlugi{display:none}
+  .naglowek__wycena-krotki{display:inline}
+  .naglowek__pas{gap:var(--o-2)}
+}
+@media(max-width:23.99em){.naglowek__logo img{height:34px}.naglowek__wycena{padding:10px;font-size:.875rem}}
