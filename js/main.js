@@ -248,3 +248,128 @@
     if (otwierajacy) otwierajacy.focus();
   });
 })();
+
+// Lightbox realizacji: zdjęcia jednej realizacji jako galeria (strzałki, klawiatura, przesunięcie palcem).
+// Bez obsługi <dialog> zostaje zwykły link do pełnego zdjęcia.
+(function () {
+  'use strict';
+  var linki = document.querySelectorAll('.realizacja__galeria a[href$=".webp"]');
+  if (!linki.length || typeof document.createElement('dialog').showModal !== 'function') return;
+  var de = document.documentElement.lang === 'de';
+  var L = de ? { zamknij: 'Schließen', poprz: 'Vorheriges Foto', nast: 'Nächstes Foto', z: 'von' }
+             : { zamknij: 'Zamknij', poprz: 'Poprzednie zdjęcie', nast: 'Następne zdjęcie', z: 'z' };
+  var ruch = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var okno = document.createElement('dialog');
+  okno.className = 'lightbox';
+  okno.setAttribute('aria-label', de ? 'Fotogalerie' : 'Galeria zdjęć');
+  okno.innerHTML = '<figure class="lightbox__kadr"><img class="lightbox__zdjecie" alt=""><figcaption class="lightbox__opis">' +
+    '<span class="lightbox__tekst"></span><span class="lightbox__licznik" aria-live="polite"></span></figcaption></figure>' +
+    '<button class="lightbox__przycisk lightbox__zamknij" type="button" aria-label="' + L.zamknij + '"></button>' +
+    '<button class="lightbox__przycisk lightbox__poprz" type="button" aria-label="' + L.poprz + '"></button>' +
+    '<button class="lightbox__przycisk lightbox__nast" type="button" aria-label="' + L.nast + '"></button>';
+  document.body.appendChild(okno);
+  var img = okno.querySelector('.lightbox__zdjecie');
+  var tekst = okno.querySelector('.lightbox__tekst');
+  var licznik = okno.querySelector('.lightbox__licznik');
+  var poprz = okno.querySelector('.lightbox__poprz');
+  var nast = okno.querySelector('.lightbox__nast');
+  var galeria = [], nr = 0, otwierajacy = null, zmiana = 0;
+
+  function wczytaj(i) { var p = new Image(); p.src = galeria[i].href; return p; }
+
+  function pokaz(i, kierunek) {
+    nr = (i + galeria.length) % galeria.length;
+    var el = galeria[nr], ten = ++zmiana;
+    var gotowe = wczytaj(nr);
+    var podmien = function () {
+      if (ten !== zmiana) return;
+      img.src = el.href;
+      img.alt = el.alt;
+      tekst.textContent = el.alt;
+      licznik.textContent = galeria.length > 1 ? (nr + 1) + ' ' + L.z + ' ' + galeria.length : '';
+      img.classList.remove('lightbox__zdjecie--wyjscie', 'lightbox__zdjecie--prawo', 'lightbox__zdjecie--lewo');
+      if (ruch && kierunek) {
+        img.classList.add(kierunek > 0 ? 'lightbox__zdjecie--prawo' : 'lightbox__zdjecie--lewo');
+        void img.offsetWidth;
+        img.classList.remove('lightbox__zdjecie--prawo', 'lightbox__zdjecie--lewo');
+      }
+      if (galeria.length > 1) { wczytaj((nr + 1) % galeria.length); wczytaj((nr - 1 + galeria.length) % galeria.length); }
+    };
+    if (ruch && kierunek && img.src) {
+      img.classList.add('lightbox__zdjecie--wyjscie');
+      Promise.all([gotowe.decode ? gotowe.decode().catch(function () {}) : null, new Promise(function (r) { setTimeout(r, 160); })]).then(podmien);
+    } else {
+      (gotowe.decode ? gotowe.decode().catch(function () {}) : Promise.resolve()).then(podmien);
+    }
+  }
+
+  Array.prototype.forEach.call(linki, function (a) {
+    a.addEventListener('click', function (e) {
+      if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      var grupa = a.closest('.realizacja__galeria').querySelectorAll('a[href$=".webp"]');
+      galeria = Array.prototype.map.call(grupa, function (x) {
+        var obraz = x.querySelector('img');
+        return { href: x.getAttribute('href'), alt: obraz ? obraz.alt : '' };
+      });
+      okno.classList.toggle('lightbox--jedno', galeria.length < 2);
+      otwierajacy = a;
+      img.removeAttribute('src');
+      pokaz(Array.prototype.indexOf.call(grupa, a), 0);
+      okno.showModal();
+      document.documentElement.style.overflow = 'hidden';
+    });
+  });
+
+  poprz.addEventListener('click', function () { pokaz(nr - 1, -1); });
+  nast.addEventListener('click', function () { pokaz(nr + 1, 1); });
+  okno.querySelector('.lightbox__zamknij').addEventListener('click', function () { okno.close(); });
+  okno.addEventListener('click', function (e) { if (e.target === okno || e.target.classList.contains('lightbox__kadr')) okno.close(); });
+  okno.addEventListener('keydown', function (e) {
+    if (galeria.length < 2) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); pokaz(nr + 1, 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); pokaz(nr - 1, -1); }
+  });
+  okno.addEventListener('close', function () {
+    document.documentElement.style.overflow = '';
+    if (otwierajacy) otwierajacy.focus();
+  });
+  // przesunięcie palcem w bok zmienia zdjęcie
+  var start = null;
+  okno.addEventListener('touchstart', function (e) { start = e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : null; }, { passive: true });
+  okno.addEventListener('touchend', function (e) {
+    if (!start || galeria.length < 2) return;
+    var dx = e.changedTouches[0].clientX - start[0], dy = e.changedTouches[0].clientY - start[1];
+    start = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) pokaz(nr + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+  });
+})();
+
+// FAQ: płynne rozwijanie i zwijanie odpowiedzi (wysokość animowana, <details> działa też bez JS).
+(function () {
+  'use strict';
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !Element.prototype.animate) return;
+  Array.prototype.forEach.call(document.querySelectorAll('.faq details'), function (d) {
+    var summary = d.querySelector('summary');
+    var anim = null;
+    summary.addEventListener('click', function (e) {
+      e.preventDefault();
+      var od = d.offsetHeight;
+      if (anim) anim.cancel();
+      var zamykanie = d.open && !d.classList.contains('faq--zamyka');
+      if (zamykanie) {
+        d.classList.add('faq--zamyka');
+        var do_ = summary.offsetHeight;
+        anim = d.animate({ height: [od + 'px', do_ + 'px'] }, { duration: 260, easing: 'cubic-bezier(.4,0,.2,1)' });
+        anim.onfinish = function () { d.open = false; d.classList.remove('faq--zamyka'); anim = null; };
+      } else {
+        d.classList.remove('faq--zamyka');
+        d.open = true;
+        var pelna = d.offsetHeight;
+        anim = d.animate({ height: [od + 'px', pelna + 'px'] }, { duration: 300, easing: 'cubic-bezier(.4,0,.2,1)' });
+        anim.onfinish = function () { anim = null; };
+      }
+    });
+  });
+})();

@@ -391,7 +391,7 @@ ul,ol{margin:0;padding:0}
 .faq summary{display:flex;justify-content:space-between;align-items:center;gap:var(--o-4);min-height:64px;padding:var(--o-4) var(--o-5);cursor:pointer;list-style:none;font:700 1.125rem/1.3 var(--f-tytul)}
 .faq summary::-webkit-details-marker{display:none}
 .faq summary::after{content:"";flex:none;width:9px;height:9px;border-right:2px solid var(--niebieski);border-bottom:2px solid var(--niebieski);transform:rotate(45deg) translate(-3px,-3px)}
-.faq details[open] summary::after{transform:rotate(-135deg)}
+.faq details[open]:not(.faq--zamyka) summary::after{transform:rotate(-135deg)}
 .faq__odp{padding:0 var(--o-5) var(--o-5);color:var(--szary);max-width:46rem}
 
 /* ---------- Pas z wezwaniem do kontaktu ---------- */
@@ -521,7 +521,7 @@ h1 em,h2 em,.megamenu__cta-tytul em{font-style:normal;color:var(--niebieski)}
 .faq summary::after{width:34px;height:34px;border:0;border-radius:50%;transform:none;background:var(--tlo-3) no-repeat center/12px 12px;
   background-image:linear-gradient(var(--niebieski),var(--niebieski)),linear-gradient(var(--niebieski),var(--niebieski));
   background-size:12px 2px,2px 12px}
-.faq details[open] summary::after{transform:none;background-color:var(--pomarancz);background-image:linear-gradient(var(--tekst),var(--tekst));background-size:12px 2px}
+.faq details[open]:not(.faq--zamyka) summary::after{transform:none;background-color:var(--pomarancz);background-image:linear-gradient(var(--tekst),var(--tekst));background-size:12px 2px}
 .sekcja--papier .faq summary::after{background-color:var(--tlo-2)}
 @media(min-width:64em){
   .tabliczka--pozioma dl{grid-template-columns:minmax(0,1.25fr) repeat(3,minmax(0,1fr))}
@@ -1104,3 +1104,73 @@ a.tabliczka__duza{display:inline-flex;align-items:center;min-height:44px}
   .naglowek__pas{gap:var(--o-2)}
 }
 @media(max-width:23.99em){.naglowek__logo img{height:34px}.naglowek__wycena{padding:10px;font-size:.875rem}}
+
+/* ---------- 6.11: przejścia między podstronami (View Transitions, nagłówek zostaje na miejscu) ---------- */
+@view-transition{navigation:auto}
+.naglowek{view-transition-name:naglowek}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.28s;animation-timing-function:cubic-bezier(.4,0,.2,1)}
+@media(prefers-reduced-motion:reduce){@view-transition{navigation:none}}
+
+/* ---------- 6.11: FAQ płynnie ---------- */
+.faq details{overflow:hidden}
+.faq summary::after{transition:background-color .25s ease,transform .25s ease}
+.faq details[open]:not(.faq--zamyka) .faq__odp{animation:faq-odp .3s ease both}
+@keyframes faq-odp{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.faq details[open] .faq__odp{animation:none}}
+
+/* ---------- 6.11: lightbox zdjęć realizacji ---------- */
+.lightbox{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:rgba(4,18,42,.94);color:#fff;overflow:hidden}
+.lightbox::backdrop{background:transparent}
+.lightbox[open]{display:grid;place-items:center;animation:lightbox-wejscie .22s ease both}
+@keyframes lightbox-wejscie{from{opacity:0}to{opacity:1}}
+.lightbox__kadr{display:grid;justify-items:center;gap:14px;margin:0;width:100%;height:100%;padding:72px 84px 24px;box-sizing:border-box;align-content:center}
+.lightbox__zdjecie{display:block;max-width:100%;max-height:calc(100dvh - 150px);width:auto;height:auto;border-radius:var(--r-2);box-shadow:0 30px 80px -30px rgba(0,0,0,.7);transition:opacity .18s ease,transform .26s cubic-bezier(.4,0,.2,1);user-select:none;-webkit-user-drag:none}
+.lightbox__zdjecie--wyjscie{opacity:0;transform:scale(.985)}
+.lightbox__zdjecie--prawo{opacity:0;transform:translateX(28px);transition:none}
+.lightbox__zdjecie--lewo{opacity:0;transform:translateX(-28px);transition:none}
+.lightbox__opis{display:flex;justify-content:space-between;align-items:baseline;gap:16px;width:min(100%,46rem);font-size:.9375rem;color:rgba(255,255,255,.82)}
+.lightbox__licznik{flex:none;font:600 .875rem/1 var(--f-mono);color:rgba(255,255,255,.62)}
+.lightbox__przycisk{position:absolute;display:grid;place-items:center;width:52px;height:52px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
+.lightbox__przycisk::before{content:"";width:12px;height:12px;border-top:2.5px solid currentColor;border-right:2.5px solid currentColor}
+.lightbox__przycisk:focus-visible{outline:3px solid var(--pomarancz);outline-offset:3px}
+.lightbox__zamknij{top:16px;right:16px}
+.lightbox__zamknij::before,.lightbox__zamknij::after{content:"";position:absolute;width:20px;height:2.5px;border:0;border-radius:2px;background:currentColor;transform:rotate(45deg)}
+.lightbox__zamknij::after{transform:rotate(-45deg)}
+.lightbox__poprz{left:18px;top:50%;margin-top:-26px}
+.lightbox__poprz::before{transform:translateX(3px) rotate(-135deg)}
+.lightbox__nast{right:18px;top:50%;margin-top:-26px}
+.lightbox__nast::before{transform:translateX(-3px) rotate(45deg)}
+.lightbox--jedno .lightbox__poprz,.lightbox--jedno .lightbox__nast{display:none}
+body:has(.lightbox[open]) .tel-plywak{display:none}
+.realizacja__galeria a[href$=".webp"]{cursor:zoom-in}
+@media(max-width:47.99em){
+  .lightbox__kadr{padding:68px 12px 92px}
+  .lightbox__zdjecie{max-height:calc(100dvh - 200px)}
+  .lightbox__poprz,.lightbox__nast{top:auto;bottom:20px;margin-top:0}
+  .lightbox__poprz{left:calc(50% - 64px)}
+  .lightbox__nast{right:calc(50% - 64px)}
+  .lightbox__opis{font-size:.875rem}
+}
+@media(prefers-reduced-motion:reduce){.lightbox[open]{animation:none}.lightbox__zdjecie{transition:none}}
+
+/* ---------- 6.11: logo w nagłówku i stopce zawsze tej samej wielkości ---------- */
+:root{--logo-h:34px}
+@media(min-width:24em){:root{--logo-h:44px}}
+@media(min-width:48em){:root{--logo-h:50px}}
+.naglowek__logo img,.logo--stopka img{height:var(--logo-h);width:auto}
+
+/* ---------- 6.11: stopka dopracowana ---------- */
+.stopka__marka p{max-width:21rem}
+.stopka__kontakt{gap:2px}
+.stopka__tytul{margin-bottom:var(--o-3)}
+@media(min-width:48em) and (max-width:63.99em){
+  .stopka__siatka{grid-template-columns:repeat(var(--kolumny),minmax(0,1fr));gap:var(--o-7) var(--o-5)}
+  .stopka__marka{grid-column:1/-1;max-width:none;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--o-6);align-items:start}
+  .stopka__marka > .logo,.stopka__marka > p{grid-column:1}
+  .stopka__kontakt{grid-column:2;grid-row:1/span 2;margin-top:0;justify-items:end;text-align:right}
+}
+@media(max-width:47.99em){
+  .stopka__siatka{gap:var(--o-6) var(--o-4)}
+  .stopka__dol{margin-top:var(--o-6);gap:var(--o-3);font-size:.8125rem}
+  .stopka__dokumenty{flex-direction:column;align-items:flex-start;gap:0}
+}
